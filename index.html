@@ -1,11 +1,1 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0;url=eco-sorter.html">
-  <title>Redirecting...</title>
-</head>
-<body>
-  <p>กำลังเปลี่ยนเส้นทางไปยัง <a href="eco-sorter.html">eco-sorter.html</a> หากไม่ได้เปลี่ยนอัตโนมัติ</p>
-</body>
-</html>
+<!DOCTYPE html>\n<html lang="en">\n<head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>Eco Sorter Game</title>\n    <style>\n        body { font-family: Arial, sans-serif; }\n        .bin { width: 100px; height: 100px; margin: 20px; border: 2px dashed #ccc; display: inline-block; }\n        .item { width: 50px; height: 50px; margin: 20px; cursor: pointer; }\n        #score { font-size: 20px; }\n    </style>\n</head>\n<body>\n\n<h1>Eco Sorter Game</h1>\n<div id="timer">Time Left: 30</div>\n<div id="score">Score: 0</div>\n\n<div class="bin" id="recycleBin"></div>\n<div class="bin" id="trashBin"></div>\n\n<div class="item" draggable="true" id="plasticBag">🛍️</div>\n<div class="item" draggable="true" id="bananaPeel">🍌</div>\n\n<script>\n    let timeLeft = 30;\n    let score = 0;\n    const timerId = setInterval(() => {\n        timeLeft--;\n        document.getElementById('timer').textContent = "Time Left: " + timeLeft;\n        if (timeLeft <= 0) {\n            clearInterval(timerId);\n            alert("Time's up! Your score is: " + score);\n        }\n    }, 1000);\n\n    document.querySelectorAll('.item').forEach(item => {\n        item.addEventListener('dragstart', dragStart);\n    });\n\n    document.querySelectorAll('.bin').forEach(bin => {\n        bin.addEventListener('dragover', dragOver);\n        bin.addEventListener('drop', drop);\n    });\n\n    function dragStart(e) {\n        e.dataTransfer.setData("text/plain", e.target.id);\n    }\n\n    function dragOver(e) {\n        e.preventDefault();\n    }\n\n    function drop(e) {\n        e.preventDefault();\n        const itemId = e.dataTransfer.getData("text/plain");\n        const droppedItem = document.getElementById(itemId);\n        if (e.target.id === "recycleBin" && itemId === "plasticBag") {\n            score += 10;\n        } else if (e.target.id === "trashBin" && itemId === "bananaPeel") {\n            score += 10;\n        } else {\n            score -= 5;\n        }\n        document.getElementById('score').textContent = "Score: " + score;\n        droppedItem.remove();\n    }\n</script>\n</body>\n</html>
