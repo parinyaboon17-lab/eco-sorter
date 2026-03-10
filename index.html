@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Eco-Sorter 2026 | พร้อมใช้งานบน GitHub</title>
+  <title>Eco-Sorter 2026</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -14,25 +14,26 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
   <style>
+    body { background: #f8fafc; font-family: sans-serif; }
+    .loading-text { display: flex; justify-content: center; align-items: center; height: 100vh; color: #10b981; font-weight: bold; }
     @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
     .animate-shake { animation: shake 0.2s ease-in-out 2; }
-    body { 
-        background: radial-gradient(circle at center, #f8fafc, #e2e8f0); 
-        overflow-x: hidden;
-        overscroll-behavior-y: contain;
-    }
     .touch-none { touch-action: none; }
   </style>
 </head>
 <body>
-  <div id="root"></div>
+  <div id="root">
+    <div class="loading-text">กำลังโหลดระบบ Eco-Sorter... (ถ้าค้างหน้านี้นานเกิน 10 วินาที แสดงว่า Code มีจุดผิด)</div>
+  </div>
 
   <script type="text/babel">
     const { useState, useEffect, useCallback, useRef } = React;
     const { motion, AnimatePresence } = FramerMotion;
 
-    // ✅ ใส่ URL ของคุณเรียบร้อยแล้ว
     const API_URL = "https://script.google.com/macros/s/AKfycbwVy1shvC4dk_SJnmk0ZnR8amiufwJNGCjQeRnvKSrwtBex87GN3zcUpoAEg2MnMggX/exec";
+
+    // --- ส่วนของโค้ดเกม (WASTE_POOL, App, GameOver) ให้ก๊อปปี้จากไฟล์ก่อนหน้าที่ผมส่งให้ได้เลยครับ ---
+    // (เพื่อความกระชับ ผมขอตัดส่วนที่เหมือนเดิมออก แต่ในไฟล์จริงของคุณต้องใส่ให้ครบนะครับ)
 
     const WASTE_POOL = [
       { name: 'Apple', type: 'Organic', icon: '🍎' },
@@ -46,12 +47,7 @@
     const isOverElement = (point, element) => {
       if (!element) return false;
       const rect = element.getBoundingClientRect();
-      return (
-        point.x >= rect.left &&
-        point.x <= rect.right &&
-        point.y >= rect.top &&
-        point.y <= rect.bottom
-      );
+      return (point.x >= rect.left && point.x <= rect.right && point.y >= rect.top && point.y <= rect.bottom);
     };
 
     function App() {
@@ -68,10 +64,7 @@
           const res = await fetch(API_URL);
           const data = await res.json();
           setRankings(Array.isArray(data) ? data : []);
-        } catch (e) { 
-          console.error("API Error", e);
-          setRankings([]); 
-        }
+        } catch (e) { setRankings([]); }
       }, []);
 
       const saveScore = async (name) => {
@@ -79,7 +72,7 @@
           const res = await fetch(`${API_URL}?action=save&name=${encodeURIComponent(name)}&score=${score}`);
           const data = await res.json();
           setRankings(data);
-        } catch (e) { console.error("Save Error", e); }
+        } catch (e) { }
       };
 
       const spawnItem = useCallback(() => {
@@ -90,7 +83,7 @@
       useEffect(() => {
         setItems(Array.from({ length: 3 }).map(() => spawnItem()));
         fetchRankings();
-      }, [spawnItem, fetchRankings]);
+      }, []);
 
       useEffect(() => {
         if (timeLeft > 0 && !isGameOver) {
@@ -117,34 +110,21 @@
       const onDragEnd = (event, info, itemId) => {
         const dropPoint = { x: info.point.x, y: info.point.y };
         let detectedType = null;
-
         ['Organic', 'Recyclable', 'Hazardous'].forEach(type => {
-          if (isOverElement(dropPoint, binRefs.current[type])) {
-            detectedType = type;
-          }
+          if (isOverElement(dropPoint, binRefs.current[type])) detectedType = type;
         });
-
-        if (detectedType) {
-          handleSort(itemId, detectedType);
-        }
+        if (detectedType) handleSort(itemId, detectedType);
       };
 
       return (
-        <div className="min-h-screen flex flex-col p-4 md:p-8 font-sans select-none">
+        <div className="min-h-screen flex flex-col p-4 md:p-8 select-none">
           <header className="max-w-4xl mx-auto w-full flex justify-between items-center mb-8 bg-white p-6 rounded-3xl shadow-lg border-b-4 border-slate-200">
             <h1 className="text-xl md:text-2xl font-black text-emerald-600">ECO-SORTER</h1>
             <div className="flex gap-4 md:gap-6">
-              <div className="text-center">
-                <p className="text-[10px] font-bold text-slate-400 uppercase">Time</p>
-                <p className="text-lg md:text-xl font-black">{timeLeft}s</p>
-              </div>
-              <div className="text-center">
-                <p className="text-[10px] font-bold text-slate-400 uppercase">Score</p>
-                <p className="text-lg md:text-xl font-black text-blue-600">{score}</p>
-              </div>
+              <div className="text-center"><p className="text-[10px] font-bold text-slate-400 uppercase">Time</p><p className="text-lg md:text-xl font-black">{timeLeft}s</p></div>
+              <div className="text-center"><p className="text-[10px] font-bold text-slate-400 uppercase">Score</p><p className="text-lg md:text-xl font-black text-blue-600">{score}</p></div>
             </div>
           </header>
-
           <main className="flex-grow max-w-4xl mx-auto w-full flex flex-col items-center">
             <AnimatePresence mode="wait">
               {isGameOver ? (
@@ -153,33 +133,16 @@
                 <div className={`w-full ${isShaking ? 'animate-shake' : ''}`}>
                   <div className="flex justify-center gap-4 mb-16">
                     {['Organic', 'Recyclable', 'Hazardous'].map(type => (
-                      <div 
-                        key={type}
-                        ref={el => binRefs.current[type] = el}
-                        className={`w-24 h-32 md:w-32 md:h-40 rounded-t-3xl flex flex-col items-center justify-center text-white font-bold shadow-xl ${type==='Organic'?'bg-emerald-500':type==='Recyclable'?'bg-sky-500':'bg-rose-500'}`}
-                      >
+                      <div key={type} ref={el => binRefs.current[type] = el} className={`w-24 h-32 md:w-32 md:h-40 rounded-t-3xl flex flex-col items-center justify-center text-white font-bold shadow-xl ${type==='Organic'?'bg-emerald-500':type==='Recyclable'?'bg-sky-500':'bg-rose-500'}`}>
                         <span className="text-3xl mb-1 pointer-events-none">🗑️</span>
                         <span className="text-[10px] md:text-sm uppercase tracking-tighter pointer-events-none">{type}</span>
                       </div>
                     ))}
                   </div>
-
                   <div className="flex flex-wrap justify-center gap-6 min-h-[160px] relative">
                     <AnimatePresence>
                       {items.map(item => (
-                        <motion.div
-                          key={item.id}
-                          layout
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          exit={{ scale: 0 }}
-                          drag
-                          dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-                          dragElastic={0.7}
-                          whileDrag={{ scale: 1.2, zIndex: 50 }}
-                          onDragEnd={(e, info) => onDragEnd(e, info, item.id)}
-                          className="bg-white p-6 rounded-2xl shadow-lg border-2 border-slate-100 cursor-grab active:cursor-grabbing text-center touch-none w-28 md:w-32"
-                        >
+                        <motion.div key={item.id} layout initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} drag dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }} dragElastic={0.7} whileDrag={{ scale: 1.2, zIndex: 50 }} onDragEnd={(e, info) => onDragEnd(e, info, item.id)} className="bg-white p-6 rounded-2xl shadow-lg border-2 border-slate-100 cursor-grab active:cursor-grabbing text-center touch-none w-28 md:w-32">
                           <span className="text-4xl block mb-2 pointer-events-none">{item.icon}</span>
                           <span className="font-bold text-slate-700 pointer-events-none text-sm">{item.name}</span>
                         </motion.div>
@@ -190,7 +153,6 @@
               )}
             </AnimatePresence>
           </main>
-
           <footer className="text-center py-8 text-slate-400 text-[10px]">
             <p>© 2026 Copyright | พัฒนาโดย <strong>Parinya Boonsattha</strong></p>
           </footer>
@@ -201,12 +163,10 @@
     function GameOver({ score, rankings, onSave }) {
       const [name, setName] = useState("");
       const [saved, setSaved] = useState(false);
-
       return (
         <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-2xl text-center max-w-sm w-full border-t-8 border-emerald-500 mx-auto">
           <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-2">Time Up!</h2>
           <p className="text-slate-500 mb-6">คะแนนของคุณ: <span className="text-2xl font-bold text-emerald-500">{score}</span></p>
-          
           {!saved ? (
             <div className="space-y-3 mb-6">
               <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="ใส่ชื่อของคุณ" className="w-full p-3 rounded-xl border-2 border-slate-100 text-center outline-none focus:border-emerald-400" />
@@ -214,7 +174,7 @@
             </div>
           ) : (
             <div className="mb-6 bg-slate-50 p-4 rounded-2xl text-left max-h-48 overflow-y-auto">
-              <h3 className="text-center font-black text-[10px] text-slate-400 mb-3 uppercase tracking-widest">อันดับทั่วโลก</h3>
+              <h3 className="text-center font-black text-[10px] text-slate-400 mb-3 uppercase tracking-widest">Global Rankings</h3>
               {rankings.length > 0 ? rankings.map((r, i) => (
                 <div key={i} className="flex justify-between py-1.5 border-b border-slate-100 last:border-0">
                   <span className="font-bold text-slate-600 text-sm">{i+1}. {r.name}</span>
