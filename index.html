@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Eco-Sorter 2026 | Mobile Ready</title>
+  <title>Eco-Sorter 2026 | พร้อมใช้งานบน GitHub</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -19,9 +19,9 @@
     body { 
         background: radial-gradient(circle at center, #f8fafc, #e2e8f0); 
         overflow-x: hidden;
-        overscroll-behavior-y: contain; /* กันดึงหน้าจอลงเพื่อ refresh บนมือถือ */
+        overscroll-behavior-y: contain;
     }
-    .touch-none { touch-action: none; } /* สำคัญมากสำหรับการลากบนมือถือ */
+    .touch-none { touch-action: none; }
   </style>
 </head>
 <body>
@@ -31,7 +31,7 @@
     const { useState, useEffect, useCallback, useRef } = React;
     const { motion, AnimatePresence } = FramerMotion;
 
-    // เปลี่ยน URL ตรงนี้เป็นลิงก์ที่ได้จากการ Deploy Google Apps Script
+    // ✅ ใส่ URL ของคุณเรียบร้อยแล้ว
     const API_URL = "https://script.google.com/macros/s/AKfycbwVy1shvC4dk_SJnmk0ZnR8amiufwJNGCjQeRnvKSrwtBex87GN3zcUpoAEg2MnMggX/exec";
 
     const WASTE_POOL = [
@@ -43,7 +43,6 @@
       { name: 'Light Bulb', type: 'Hazardous', icon: '💡' }
     ];
 
-    // เช็คว่าตำแหน่งที่ปล่อยนิ้ว/เมาส์ อยู่บนถังขยะหรือไม่
     const isOverElement = (point, element) => {
       if (!element) return false;
       const rect = element.getBoundingClientRect();
@@ -70,7 +69,7 @@
           const data = await res.json();
           setRankings(Array.isArray(data) ? data : []);
         } catch (e) { 
-          console.error("Ranking API Error", e);
+          console.error("API Error", e);
           setRankings([]); 
         }
       }, []);
@@ -80,7 +79,7 @@
           const res = await fetch(`${API_URL}?action=save&name=${encodeURIComponent(name)}&score=${score}`);
           const data = await res.json();
           setRankings(data);
-        } catch (e) { console.error("Save Score Error", e); }
+        } catch (e) { console.error("Save Error", e); }
       };
 
       const spawnItem = useCallback(() => {
@@ -135,8 +134,14 @@
           <header className="max-w-4xl mx-auto w-full flex justify-between items-center mb-8 bg-white p-6 rounded-3xl shadow-lg border-b-4 border-slate-200">
             <h1 className="text-xl md:text-2xl font-black text-emerald-600">ECO-SORTER</h1>
             <div className="flex gap-4 md:gap-6">
-              <div className="text-center"><p className="text-[10px] font-bold text-slate-400 uppercase">Time</p><p className="text-lg md:text-xl font-black">{timeLeft}s</p></div>
-              <div className="text-center"><p className="text-[10px] font-bold text-slate-400 uppercase">Score</p><p className="text-lg md:text-xl font-black text-blue-600">{score}</p></div>
+              <div className="text-center">
+                <p className="text-[10px] font-bold text-slate-400 uppercase">Time</p>
+                <p className="text-lg md:text-xl font-black">{timeLeft}s</p>
+              </div>
+              <div className="text-center">
+                <p className="text-[10px] font-bold text-slate-400 uppercase">Score</p>
+                <p className="text-lg md:text-xl font-black text-blue-600">{score}</p>
+              </div>
             </div>
           </header>
 
@@ -160,7 +165,7 @@
                   </div>
 
                   <div className="flex flex-wrap justify-center gap-6 min-h-[160px] relative">
-                    <AnimatePresence shadow>
+                    <AnimatePresence>
                       {items.map(item => (
                         <motion.div
                           key={item.id}
@@ -209,7 +214,7 @@
             </div>
           ) : (
             <div className="mb-6 bg-slate-50 p-4 rounded-2xl text-left max-h-48 overflow-y-auto">
-              <h3 className="text-center font-black text-[10px] text-slate-400 mb-3 uppercase tracking-widest">Global Rankings</h3>
+              <h3 className="text-center font-black text-[10px] text-slate-400 mb-3 uppercase tracking-widest">อันดับทั่วโลก</h3>
               {rankings.length > 0 ? rankings.map((r, i) => (
                 <div key={i} className="flex justify-between py-1.5 border-b border-slate-100 last:border-0">
                   <span className="font-bold text-slate-600 text-sm">{i+1}. {r.name}</span>
@@ -228,4 +233,3 @@
   </script>
 </body>
 </html>
-
