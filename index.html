@@ -4,29 +4,34 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Eco-Sorter 2026 | Mobile Ready</title>
+  
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
   <style>
     @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
     .animate-shake { animation: shake 0.2s ease-in-out 2; }
     body { 
         background: radial-gradient(circle at center, #f8fafc, #e2e8f0); 
         overflow-x: hidden;
-        overscroll-behavior-y: contain; /* ป้องกันการเลื่อนหน้าจอลงเพื่อ refresh บนมือถือขณะเล่น */
+        overscroll-behavior-y: contain; /* กันดึงหน้าจอลงเพื่อ refresh บนมือถือ */
     }
-    .touch-none { touch-action: none; }
+    .touch-none { touch-action: none; } /* สำคัญมากสำหรับการลากบนมือถือ */
   </style>
 </head>
 <body>
   <div id="root"></div>
 
-  <script>
+  <script type="text/babel">
     const { useState, useEffect, useCallback, useRef } = React;
     const { motion, AnimatePresence } = FramerMotion;
 
+    // เปลี่ยน URL ตรงนี้เป็นลิงก์ที่ได้จากการ Deploy Google Apps Script
     const API_URL = "https://script.google.com/macros/s/AKfycbwVy1shvC4dk_SJnmk0ZnR8amiufwJNGCjQeRnvKSrwtBex87GN3zcUpoAEg2MnMggX/exec";
 
     const WASTE_POOL = [
@@ -38,7 +43,7 @@
       { name: 'Light Bulb', type: 'Hazardous', icon: '💡' }
     ];
 
-    // ฟังก์ชันช่วยเช็คว่าจุดปล่อยนิ้ว อยู่บน Element หรือไม่
+    // เช็คว่าตำแหน่งที่ปล่อยนิ้ว/เมาส์ อยู่บนถังขยะหรือไม่
     const isOverElement = (point, element) => {
       if (!element) return false;
       const rect = element.getBoundingClientRect();
@@ -57,15 +62,17 @@
       const [isGameOver, setIsGameOver] = useState(false);
       const [rankings, setRankings] = useState([]);
       const [isShaking, setIsShaking] = useState(false);
-      
-      const binRefs = useRef({}); // เก็บตำแหน่งของถังขยะแต่ละประเภท
+      const binRefs = useRef({});
 
       const fetchRankings = useCallback(async () => {
         try {
           const res = await fetch(API_URL);
           const data = await res.json();
           setRankings(Array.isArray(data) ? data : []);
-        } catch (e) { console.error("API Error", e); }
+        } catch (e) { 
+          console.error("Ranking API Error", e);
+          setRankings([]); 
+        }
       }, []);
 
       const saveScore = async (name) => {
@@ -73,7 +80,7 @@
           const res = await fetch(`${API_URL}?action=save&name=${encodeURIComponent(name)}&score=${score}`);
           const data = await res.json();
           setRankings(data);
-        } catch (e) { console.error("Save Error", e); }
+        } catch (e) { console.error("Save Score Error", e); }
       };
 
       const spawnItem = useCallback(() => {
@@ -108,7 +115,6 @@
         }
       };
 
-      // ฟังก์ชันเมื่อปล่อยการลาก (Drag End)
       const onDragEnd = (event, info, itemId) => {
         const dropPoint = { x: info.point.x, y: info.point.y };
         let detectedType = null;
@@ -125,7 +131,7 @@
       };
 
       return (
-        <div className="min-h-screen flex flex-col p-4 md:p-8 font-sans">
+        <div className="min-h-screen flex flex-col p-4 md:p-8 font-sans select-none">
           <header className="max-w-4xl mx-auto w-full flex justify-between items-center mb-8 bg-white p-6 rounded-3xl shadow-lg border-b-4 border-slate-200">
             <h1 className="text-xl md:text-2xl font-black text-emerald-600">ECO-SORTER</h1>
             <div className="flex gap-4 md:gap-6">
@@ -140,13 +146,12 @@
                 <GameOver score={score} rankings={rankings} onSave={saveScore} />
               ) : (
                 <div className={`w-full ${isShaking ? 'animate-shake' : ''}`}>
-                  {/* Drop Targets (ถังขยะ) */}
                   <div className="flex justify-center gap-4 mb-16">
                     {['Organic', 'Recyclable', 'Hazardous'].map(type => (
                       <div 
                         key={type}
                         ref={el => binRefs.current[type] = el}
-                        className={`w-24 h-32 md:w-32 md:h-40 rounded-t-3xl flex flex-col items-center justify-center text-white font-bold shadow-xl transition-all ${type==='Organic'?'bg-emerald-500':type==='Recyclable'?'bg-sky-500':'bg-rose-500'}`}
+                        className={`w-24 h-32 md:w-32 md:h-40 rounded-t-3xl flex flex-col items-center justify-center text-white font-bold shadow-xl ${type==='Organic'?'bg-emerald-500':type==='Recyclable'?'bg-sky-500':'bg-rose-500'}`}
                       >
                         <span className="text-3xl mb-1 pointer-events-none">🗑️</span>
                         <span className="text-[10px] md:text-sm uppercase tracking-tighter pointer-events-none">{type}</span>
@@ -154,9 +159,8 @@
                     ))}
                   </div>
 
-                  {/* Draggable Items (ขยะ) */}
                   <div className="flex flex-wrap justify-center gap-6 min-h-[160px] relative">
-                    <AnimatePresence>
+                    <AnimatePresence shadow>
                       {items.map(item => (
                         <motion.div
                           key={item.id}
@@ -164,14 +168,11 @@
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           exit={{ scale: 0 }}
-                          
-                          // Framer Motion Drag Settings
                           drag
                           dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-                          dragElastic={0.9}
-                          whileDrag={{ scale: 1.1, zIndex: 50 }}
+                          dragElastic={0.7}
+                          whileDrag={{ scale: 1.2, zIndex: 50 }}
                           onDragEnd={(e, info) => onDragEnd(e, info, item.id)}
-                          
                           className="bg-white p-6 rounded-2xl shadow-lg border-2 border-slate-100 cursor-grab active:cursor-grabbing text-center touch-none w-28 md:w-32"
                         >
                           <span className="text-4xl block mb-2 pointer-events-none">{item.icon}</span>
@@ -197,7 +198,7 @@
       const [saved, setSaved] = useState(false);
 
       return (
-        <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-2xl text-center max-w-sm w-full border-t-8 border-emerald-500">
+        <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-2xl text-center max-w-sm w-full border-t-8 border-emerald-500 mx-auto">
           <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-2">Time Up!</h2>
           <p className="text-slate-500 mb-6">คะแนนของคุณ: <span className="text-2xl font-bold text-emerald-500">{score}</span></p>
           
@@ -227,3 +228,4 @@
   </script>
 </body>
 </html>
+
