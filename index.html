@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Eco-Sorter 2026 | Fixed</title>
+  <title>Eco-Sorter 2026 | Fixed & Ready</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   
-  <script src="https://cdn.jsdelivr.net/npm/framer-motion@10.16.4/dist/framer-motion.js"></script>
+  <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
   
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -17,7 +17,11 @@
   <style>
     @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
     .animate-shake { animation: shake 0.2s ease-in-out 2; }
-    body { background: radial-gradient(circle at center, #f8fafc, #e2e8f0); overflow-x: hidden; touch-action: manipulation; }
+    body { 
+        background: radial-gradient(circle at center, #f8fafc, #e2e8f0); 
+        overflow-x: hidden;
+        overscroll-behavior-y: contain;
+    }
     .touch-none { touch-action: none; }
   </style>
 </head>
@@ -27,7 +31,7 @@
   <script type="text/babel">
     const { useState, useEffect, useCallback, useRef } = React;
     
-    // ✅ แก้จุดนี้: ใช้ชื่อ Motion (ตามที่ CDN กำหนดไว้)
+    // ✅ จุดที่แก้ไข: เปลี่ยนจาก FramerMotion เป็น Motion
     const { motion, AnimatePresence } = Motion; 
 
     const API_URL = "https://script.google.com/macros/s/AKfycbwVy1shvC4dk_SJnmk0ZnR8amiufwJNGCjQeRnvKSrwtBex87GN3zcUpoAEg2MnMggX/exec";
@@ -66,10 +70,9 @@
 
       const saveScore = async (name) => {
         try {
-          const res = await fetch(`${API_URL}?action=save&name=${encodeURIComponent(name)}&score=${score}`);
-          const data = await res.json();
-          setRankings(data);
-        } catch (e) { console.error(e); }
+          await fetch(`${API_URL}?action=save&name=${encodeURIComponent(name)}&score=${score}`);
+          fetchRankings();
+        } catch (e) { console.error("Save Error", e); }
       };
 
       const spawnItem = useCallback(() => {
